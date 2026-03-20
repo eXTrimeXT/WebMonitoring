@@ -19,8 +19,8 @@ After=network.target
 
 [Service]
 User=root
-WorkingDirectory=/root/webMonitoring
-ExecStart=/root/webMonitoring/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+WorkingDirectory=/root/WebMonitoring
+ExecStart=/root/WebMonitoring/.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
 
 [Install]
