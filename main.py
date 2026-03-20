@@ -37,18 +37,16 @@ def get_cpu_load():
     except Exception:
         return 0.0
 
+app.get("/", response_class=HTMLResponse)
 async def dashboard():
     hostname = socket.gethostname()
     
-    # !!! ВАЖНО: Проверьте точные имена служб командой:
-    # systemctl list-units --type=service | grep -E "hysteria|mtproto"
-    # Если имена другие (например, 'hysteria' вместо 'hysteria-server'), замените их ниже.
+    # Проверка служб
     mtproxy = check_service("mtproxy")
     hysteria = check_service("hysteria-server")
     
     cpu_load = get_cpu_load()
     
-    # Определяем общий статус для заголовка
     all_ok = mtproxy["status"] == "active" and hysteria["status"] == "active"
     global_color = "#00ff88" if all_ok else "#ffaa00"
     global_msg = "Все системы в норме 🟢" if all_ok else "Внимание: Проблемы со службами 🔴"
@@ -61,25 +59,21 @@ async def dashboard():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Server Status</title>
         <style>
-            body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Hel>
+            body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 20px; display: flex; justify-content: center; }}
             .container {{ width: 100%; max-width: 500px; }}
-            h1 {{ text-align: center; color: {global_color}; font-size: 1.5rem; margin-bott>
-            .subtitle {{ text-align: center; color: #888; font-size: 0.9rem; margin-bottom:>
-
-            .card {{ background: #1e1e1e; border-radius: 12px; padding: 20px; margin-bottom>
+            h1 {{ text-align: center; color: {global_color}; font-size: 1.5rem; margin-bottom: 5px; }}
+            .subtitle {{ text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 30px; }}
+            .card {{ background: #1e1e1e; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border-left: 6px solid #555; }}
             .card.ok {{ border-left-color: #00ff88; }}
             .card.err {{ border-left-color: #ff4444; }}
-
             .row {{ display: flex; justify-content: space-between; align-items: center; }}
             .label {{ font-size: 1.1rem; font-weight: 500; }}
-            .badge {{ padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #00>
-
+            .badge {{ padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #000; font-size: 0.9rem; min-width: 80px; text-align: center; }}
             .cpu-section {{ text-align: center; }}
-            .cpu-value {{ font-size: 2.5rem; font-weight: bold; color: #fff; margin: 10px 0>
-            .progress-bg {{ background: #333; height: 10px; border-radius: 5px; overflow: h>
-            .progress-fill {{ height: 100%; background: linear-gradient(90deg, #00c6ff, #00>
-
-            small {{ display: block; text-align: center; color: #555; margin-top: 30px; fon>
+            .cpu-value {{ font-size: 2.5rem; font-weight: bold; color: #fff; margin: 10px 0; }}
+            .progress-bg {{ background: #333; height: 10px; border-radius: 5px; overflow: hidden; }}
+            .progress-fill {{ height: 100%; background: linear-gradient(90deg, #00c6ff, #0072ff); transition: width 0.5s ease; }}
+            small {{ display: block; text-align: center; color: #555; margin-top: 30px; font-size: 0.8rem; }}
         </style>
     </head>
     <body>
@@ -112,21 +106,7 @@ async def dashboard():
                 </div>
                 <div style="font-size: 0.8rem; color: #666; margin-top: 8px;">Средняя за 1 мин</div>
             </div>
-
-            <small>Автообновление через <span id="timer">5</span> сек</small>
         </div>
-
-        <script>
-            let seconds = 15;
-            const timerElem = document.getElementById('timer');
-            setInterval(() => {{
-                seconds--;
-                timerElem.innerText = seconds;
-                if (seconds <= 0) {{
-                    window.location.reload();
-                }}
-            }}, 1000);
-        </script>
     </body>
     </html>
     """
