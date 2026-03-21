@@ -22,23 +22,26 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             font-family: 'Share Tech Mono', monospace;
-            overflow: hidden;
-            height: 100vh;
+            overflow-x: hidden;
+            min-height: 100vh;
             width: 100vw;
             display: flex;
             justify-content: center;
             align-items: center;
             perspective: 1000px;
+            padding: 10px;
         }
 
         #bg-canvas {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%; z-index: 0;
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
         }
 
         .interface {
             position: relative; z-index: 10;
-            width: 90%; max-width: 1200px; height: 80vh;
+            width: 100%; max-width: 1200px; min-height: 80vh;
             display: grid;
             grid-template-columns: 1fr 2fr 1fr;
             grid-template-rows: 1fr 1fr;
@@ -85,7 +88,7 @@
         .module {
             background: var(--glass); backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px; padding: 20px;
+            border-radius: 10px; padding: 15px;
             display: flex; flex-direction: column;
             justify-content: space-between;
             transition: 0.3s; position: relative; overflow: hidden;
@@ -141,6 +144,7 @@
             padding: 15px; font-family: 'Courier New', monospace;
             font-size: 0.8rem; color: #0f0; overflow: hidden;
             display: flex; flex-direction: column-reverse;
+            max-height: 150px;
         }
 
         .log-entry { margin-bottom: 2px; opacity: 0.8; }
@@ -198,13 +202,85 @@
             100% { clip: rect(20px, 9999px, 40px, 0); }
         }
 
+        /* Enhanced Mobile Styles */
         @media (max-width: 900px) {
             .interface {
-                grid-template-columns: 1fr; grid-template-rows: auto;
-                height: auto; overflow-y: auto; display: block;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+                height: auto;
+                display: block;
+                gap: 15px;
             }
-            .core-container { height: 400px; margin-bottom: 20px; }
-            .module { margin-bottom: 20px; }
+
+            .core-container {
+                height: 300px;
+                margin: 15px 0;
+                order: 1; /* Move core to top on mobile */
+            }
+
+            .reactor {
+                width: 200px;
+                height: 200px;
+            }
+
+            .core-text h1 {
+                font-size: 2rem;
+            }
+
+            .left-column, .right-column {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .module {
+                margin-bottom: 0;
+                padding: 12px;
+            }
+
+            .module h2 {
+                font-size: 1.2rem;
+            }
+
+            .stat-row {
+                font-size: 0.8rem;
+            }
+
+            .terminal {
+                grid-column: 1;
+                max-height: 120px;
+                font-size: 0.7rem;
+            }
+
+            body {
+                padding: 5px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .core-text h1 {
+                font-size: 1.5rem;
+            }
+
+            .core-text p {
+                font-size: 0.7rem;
+            }
+
+            .module {
+                padding: 10px;
+            }
+
+            .module h2 {
+                font-size: 1rem;
+            }
+
+            .stat-row {
+                font-size: 0.7rem;
+            }
+
+            .terminal {
+                font-size: 0.6rem;
+            }
         }
     </style>
 </head>
@@ -212,7 +288,7 @@
 <canvas id="bg-canvas"></canvas>
 <div class="interface">
     <!-- LEFT COLUMN: VPN (top) + Telegram (bottom) -->
-    <div style="display: flex; flex-direction: column; gap: 20px; height: 100%;">
+    <div class="left-column">
         <!-- TOP: VPN -->
         <div class="module mod-vpn">
             <div>
@@ -265,7 +341,7 @@
     </div>
 
     <!-- RIGHT COLUMN: FastAPI + Docker -->
-    <div style="display: flex; flex-direction: column; gap: 20px; height: 100%;">
+    <div class="right-column">
         <!-- TOP: FASTAPI -->
         <div class="module mod-api">
             <div>
@@ -293,7 +369,7 @@
                     <span class="status-dot {% if docker_active %}status-active{% else %}status-inactive{% endif %}"></span>
                     DOCKER MONITOR
                 </h2>
-                <div class="stat-row"><span>Endpoint:</span> <span><a href="/api/v1/docker" target="_blank" style="color: var(--tertiary); text-decoration: underline;">/api/v1/status</a></span></div>
+                <div class="stat-row"><span>Endpoint:</span> <span><a href="/api/v1/docker" target="_blank" style="color: var(--tertiary); text-decoration: underline;">/api/v1/docker</a></span></div>
                 <div class="stat-row"><span>Status:</span> <span>{% if docker_active %}Active{% else %}Inactive{% endif %}</span></div>
                 <div class="stat-row"><span>Containers:</span> <span id="docker-count">{{ docker_count }}</span></div>
                 <div class="stat-row"><span>Daemon:</span> <span>Docker</span></div>
@@ -404,7 +480,7 @@
             document.getElementById('docker-bar').style.width = data.docker.load + '%';
 
             // Terminal log
-            addLog(`[METRICS] CPU: ${data.fastapi.cpu}% | RAM: ${data.fastapi.ram}%} | Docker: ${data.docker.containers}`);
+            addLog(`[METRICS] CPU: ${data.fastapi.cpu}% | RAM: ${data.fastapi.ram}% | VPN: ${data.vpn.peers} | Docker: ${data.docker.containers}`);
 
         } catch (error) {
             console.error('Fetch error:', error);
