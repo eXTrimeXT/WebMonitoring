@@ -1,16 +1,38 @@
+version: '3.8'
+
 services:
+  # Веб-интерфейс Nginx Proxy Manager
+  nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      # HTTP
+      - '80:80'
+      # HTTPS
+      - '443:443'
+      # Web UI (админка)
+      - '81:81'
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    depends_on:
+      - server-monitor
+
+  # Ваш монитор
   server-monitor:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: server-monitor
     restart: unless-stopped
-    ports:
-      - "8000:8000"
+    expose: # expose вместо ports, чтобы не открывать наружу
+      - "8000"
     volumes:
-      # Монтируем сокет systemd для systemctl
       - /run/systemd/system:/run/systemd/system
     environment:
-      # Убедимся, что systemd видит хост-систему
       - SYSTEMD_OFFLINE=0
-    privileged: true  # Даем контейнеру привилегии для доступа к systemd
+    privileged: true
+
+networks:
+  default:
+    driver: bridge
