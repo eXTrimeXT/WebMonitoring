@@ -396,15 +396,14 @@
             document.getElementById('api-cpu').textContent = data.fastapi.cpu + '%';
             document.getElementById('api-ram').textContent = data.fastapi.ram + '%';
             document.getElementById('api-bar').style.width = ((data.fastapi.cpu + data.fastapi.ram) / 2) + '%';
-            // Обновление времени работы сервиса FastAPI (если отображается)
-            // document.getElementById('api-uptime').textContent = data.fastapi.uptime; // <-- Если добавите в HTML
+            document.getElementById('api-uptime').textContent = data.fastapi.uptime;
 
             // Docker
             document.getElementById('docker-count').textContent = data.docker.containers;
             document.getElementById('docker-bar').style.width = data.docker.load + '%';
 
             // Terminal log
-            addLog(`[METRICS] CPU: ${data.fastapi.cpu}% | RAM: ${data.fastapi.ram}% | VPN.vpn.peers} | Docker: ${data.docker.containers}`);
+            addLog(`[METRICS] CPU: ${data.fastapi.cpu}% | RAM: ${data.fastapi.ram}%} | Docker: ${data.docker.containers}`);
 
         } catch (error) {
             console.error('Fetch error:', error);
@@ -416,7 +415,6 @@
     const terminal = document.getElementById('terminal');
     const logMessages = [
         { msg: "System heartbeat OK", type: "normal" },
-        { msg: "WireGuard tunnel active", type: "normal" },
         { msg: "FastAPI request processed", type: "normal" },
         { msg: "Docker container health check", type: "normal" },
         { msg: "Proxy connection established", type: "normal" },
@@ -448,8 +446,6 @@
     // Initial fetch
     fetchMetrics();
     addLog("🚀 Ubuntu Core Monitor initialized", "normal");
-    // Замените начальный лог на более подходящий или удалите
-    // addLog(`📊 Initial load: CPU {{ cpu_load }}% | RAM {{ ram_percent }}%`, "normal");
 </script>
 </body>
 </html>
