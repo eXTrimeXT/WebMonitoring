@@ -161,10 +161,60 @@ def check_docker_status() -> Dict:
         pass
     return result
 
+# def get_fastapi_metrics() -> Dict:
+#     """Метрики самого FastAPI приложения"""
+#     return {
+#         "uptime_percent": 99.9,
+#         "cpu_load": get_cpu_load(),
+#         "ram_usage": get_ram_usage()["percent"],
+#         "health": "healthy"
+#     }
+
 def get_fastapi_metrics() -> Dict:
     """Метрики самого FastAPI приложения"""
+    # Получаем время запуска процесса FastAPI
+    pid = None
+    try:
+        # Получаем PID из systemd
+        result = subprocess.run(["systemctl", "show", "--property=MainPID", "--value", "server-monitor"],
+                                capture_output=True, text=True, timeout=3)
+        pid_str = result.stdout.strip()
+        if pid_str.isdigit():
+            pid = int(pid_str)
+
+        if pid:
+            process = psutil.Process(pid)
+            start_time = process.create_time()
+            uptime_seconds = datetime.now().timestamp() - start_time
+
+            # Рассчитываем процент аптайма за последний день (например)
+            # Здесь можно адаптировать логику расчета процента аптайма под ваши нужды
+            # Пока что просто возвращаем время в формате HH:MM:SS
+            uptime_hours = int(uptime_seconds // 3600)
+            uptime_minutes = int((uptime_seconds % 3600) // 60)
+            uptime_secs = int(uptime_seconds % 60)
+            formatted_uptime = f"{uptime_hours:02d}:{uptime_minutes:02d}:{uptime_secs:02d}"
+
+            # Пример расчета процента аптайма за последние 24 часа
+            # Если приложение работало все 24 часа, то 100%
+            # Если было перезапущено недавно, то меньше
+            # Это упрощенный расчет - в реальной системе может быть сложнее
+            expected_uptime_last_period = 24 * 3600  # 24 часа в секундах
+            actual_uptime = min(uptime_seconds, expected_uptime_last_period)
+            uptime_percentage = round((actual_uptime / expected_uptime_last_period) * 100, 1)
+        else:
+            # Если не удалось получить PID, используем запасной вариант
+            uptime_percentage = 99.9
+            formatted_uptime = "00:00:00"
+
+    except (psutil.NoSuchProcess, psutil.AccessDenied, subprocess.TimeoutExpired, ValueError):
+        # Если не удалось получить информацию о процессе
+        uptime_percentage = 99.9
+        formatted_uptime = "00:00:00"
+
     return {
-        "uptime_percent": 99.9,
+        "uptime_percent": uptime_percentage,
+        "current_uptime": formatted_uptime,  # Новое поле с текущим временем работы
         "cpu_load": get_cpu_load(),
         "ram_usage": get_ram_usage()["percent"],
         "health": "healthy"
