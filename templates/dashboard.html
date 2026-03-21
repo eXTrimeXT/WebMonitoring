@@ -273,7 +273,7 @@
                     <span class="status-dot status-active"></span>
                     FASTAPI MONITOR
                 </h2>
-                <div class="stat-row"><span>Endpoint:</span> <span>/api/v1/status</span></div>
+                <div class="stat-row"><span>Endpoint:</span> <span><a href="/api/v1/status" target="_blank" style="color: var(--tertiary); text-decoration: underline;">/api/v1/status</a></span></div>
                 <div class="stat-row"><span>Service Uptime:</span> <span id="api-uptime">{{ api_current_uptime }}</span></div>
                 <div class="stat-row"><span>CPU Load:</span> <span id="api-cpu">{{ api_cpu }}%</span></div>
                 <div class="stat-row"><span>RAM Usage:</span> <span id="api-ram">{{ api_ram }}%</span></div>
@@ -293,6 +293,7 @@
                     <span class="status-dot {% if docker_active %}status-active{% else %}status-inactive{% endif %}"></span>
                     DOCKER MONITOR
                 </h2>
+                <div class="stat-row"><span>Endpoint:</span> <span><a href="/api/v1/docker" target="_blank" style="color: var(--tertiary); text-decoration: underline;">/api/v1/status</a></span></div>
                 <div class="stat-row"><span>Status:</span> <span>{% if docker_active %}Active{% else %}Inactive{% endif %}</span></div>
                 <div class="stat-row"><span>Containers:</span> <span id="docker-count">{{ docker_count }}</span></div>
                 <div class="stat-row"><span>Daemon:</span> <span>Docker</span></div>
