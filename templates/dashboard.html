@@ -382,8 +382,11 @@
             document.getElementById('vpn-out').textContent = data.vpn.out;
             document.getElementById('vpn-bar').style.width = data.vpn.load + '%';
 
-            // Uptime
-            document.getElementById('uptime').textContent = data.uptime;
+            // Uptime (теперь берется из ответа API)
+            document.getElementById('uptime').textContent = data.uptime; // <-- Вот тут обновляется!
+
+            // OS Name (если меняется, хотя редко)
+            document.querySelector('.core-text p').textContent = `${data.os_name} // ONLINE`;
 
             // Telegram
             document.getElementById('tg-req').textContent = data.telegram.requests;
@@ -393,16 +396,15 @@
             document.getElementById('api-cpu').textContent = data.fastapi.cpu + '%';
             document.getElementById('api-ram').textContent = data.fastapi.ram + '%';
             document.getElementById('api-bar').style.width = ((data.fastapi.cpu + data.fastapi.ram) / 2) + '%';
+            // Обновление времени работы сервиса FastAPI (если отображается)
+            // document.getElementById('api-uptime').textContent = data.fastapi.uptime; // <-- Если добавите в HTML
 
             // Docker
             document.getElementById('docker-count').textContent = data.docker.containers;
             document.getElementById('docker-bar').style.width = data.docker.load + '%';
 
-            // OS Name
-            document.querySelector('.core-text p').textContent = `${data.os_name} // ONLINE`;
-
             // Terminal log
-            addLog(`[METRICS] CPU: ${data.fastapi.cpu}% | RAM: ${data.fastapi.ram}% | VPN peers: ${data.vpn.peers} | Docker: ${data.docker.containers}`);
+            addLog(`[METRICS] CPU: ${data.fastapi.cpu}% | RAM: ${data.fastapi.ram}% | VPN.vpn.peers} | Docker: ${data.docker.containers}`);
 
         } catch (error) {
             console.error('Fetch error:', error);
@@ -410,21 +412,11 @@
         }
     }
 
-    // --- UPTIME COUNTER (client-side fallback) ---
-    let seconds = {{ uptime.split(':')[0]|int * 3600 + uptime.split(':')[1]|int * 60 + uptime.split(':')[2]|int }};
-    function updateUptime() {
-        seconds++;
-        const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
-        const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-        const s = (seconds % 60).toString().padStart(2, '0');
-        document.getElementById('uptime').textContent = `${h}:${m}:${s}`;
-    }
-
     // --- TERMINAL LOGS ---
     const terminal = document.getElementById('terminal');
     const logMessages = [
         { msg: "System heartbeat OK", type: "normal" },
-        { msg: "Hysteria tunnel active", type: "normal" },
+        { msg: "WireGuard tunnel active", type: "normal" },
         { msg: "FastAPI request processed", type: "normal" },
         { msg: "Docker container health check", type: "normal" },
         { msg: "Proxy connection established", type: "normal" },
@@ -447,8 +439,7 @@
     }
 
     // --- INIT ---
-    setInterval(fetchMetrics, 3000);  // Real data every 3s
-    setInterval(updateUptime, 1000);   // Uptime counter
+    setInterval(fetchMetrics, 3000);  // Real data every 3s - Время обновляется здесь!
     setInterval(() => {
         const randomLog = logMessages[Math.floor(Math.random() * logMessages.length)];
         addLog(randomLog.msg, randomLog.type);
@@ -457,7 +448,8 @@
     // Initial fetch
     fetchMetrics();
     addLog("🚀 Ubuntu Core Monitor initialized", "normal");
-    addLog(`📊 Initial load: CPU {{ cpu_load }}% | RAM {{ ram_percent }}%`, "normal");
+    // Замените начальный лог на более подходящий или удалите
+    // addLog(`📊 Initial load: CPU {{ cpu_load }}% | RAM {{ ram_percent }}%`, "normal");
 </script>
 </body>
 </html>
