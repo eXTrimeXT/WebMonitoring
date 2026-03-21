@@ -220,7 +220,7 @@
                     <span class="status-dot {% if vpn_active %}status-active{% else %}status-inactive{% endif %}"></span>
                     VPN SERVER
                 </h2>
-                <div class="stat-row"><span>Protocol:</span> <span>WireGuard</span></div>
+                <div class="stat-row"><span>Protocol:</span> <span>Hysteria</span></div>
                 <div class="stat-row"><span>Active Peers:</span> <span id="vpn-peers">{{ vpn_peers }}</span></div>
                 <div class="stat-row"><span>Traffic In:</span> <span id="vpn-in">{{ vpn_in }}</span></div>
                 <div class="stat-row"><span>Traffic Out:</span> <span id="vpn-out">{{ vpn_out }}</span></div>
@@ -424,7 +424,7 @@
     const terminal = document.getElementById('terminal');
     const logMessages = [
         { msg: "System heartbeat OK", type: "normal" },
-        { msg: "WireGuard tunnel active", type: "normal" },
+        { msg: "Hysteria tunnel active", type: "normal" },
         { msg: "FastAPI request processed", type: "normal" },
         { msg: "Docker container health check", type: "normal" },
         { msg: "Proxy connection established", type: "normal" },
