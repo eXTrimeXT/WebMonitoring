@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UBUNTU CORE // MONITOR</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --bg-color: #050505;
+            --primary: #00f3ff;
+            --secondary: #bd00ff;
+            --tertiary: #00ff41;
+            --text-color: #e0e0e0;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        #bg-canvas {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; z-index: 0;
+        }
+
+        .interface {
+            position: relative; z-index: 10;
+            width: 90%; max-width: 1200px; height: 80vh;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .core-container {
+            grid-column: 2; grid-row: 1 / span 2;
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+        }
+
+        .reactor {
+            width: 300px; height: 300px; border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.2);
+            animation: pulse 4s infinite ease-in-out;
+        }
+
+        .reactor-ring {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: var(--primary);
+            border-bottom-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        .r1 { width: 100%; height: 100%; animation: spin 10s linear infinite; }
+        .r2 { width: 80%; height: 80%; border-color: var(--secondary); animation: spin-rev 7s linear infinite; }
+        .r3 { width: 60%; height: 60%; border-color: var(--tertiary); animation: spin 5s linear infinite; }
+        .r4 { width: 40%; height: 40%; background: radial-gradient(circle, #fff, transparent); opacity: 0.8; }
+
+        .core-text {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); text-align: center;
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        .core-text h1 { font-size: 3rem; letter-spacing: 5px; }
+        .core-text p { font-size: 0.8rem; opacity: 0.7; }
+
+        .module {
+            background: var(--glass); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px; padding: 20px;
+            display: flex; flex-direction: column;
+            justify-content: space-between;
+            transition: 0.3s; position: relative; overflow: hidden;
+        }
+
+        .module:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+            transform: scale(1.02);
+        }
+
+        .module h2 {
+            font-size: 1.5rem; margin-bottom: 10px;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            padding-bottom: 5px;
+        }
+
+        .status-dot {
+            height: 10px; width: 10px; background-color: #333;
+            border-radius: 50%; display: inline-block;
+            margin-right: 10px; box-shadow: 0 0 5px currentColor;
+        }
+
+        .status-active { background-color: var(--tertiary); color: var(--tertiary); animation: blink 2s infinite; }
+        .status-warn { background-color: orange; color: orange; }
+        .status-inactive { background-color: #ff0000; color: #ff0000; }
+
+        .stat-row {
+            display: flex; justify-content: space-between;
+            margin: 5px 0; font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            width: 100%; height: 5px; background: #333;
+            margin-top: 5px; position: relative;
+        }
+        .progress-fill {
+            height: 100%; background: var(--primary);
+            width: 0%; transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .mod-vpn .progress-fill { background: var(--primary); box-shadow: 0 0 10px var(--primary); }
+        .mod-tg .progress-fill { background: var(--secondary); box-shadow: 0 0 10px var(--secondary); }
+        .mod-api .progress-fill { background: var(--tertiary); box-shadow: 0 0 10px var(--tertiary); }
+        .mod-docker .progress-fill { background: var(--secondary); box-shadow: 0 0 10px var(--secondary); }
+
+        .terminal {
+            grid-column: 1 / span 3;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #333; border-radius: 5px;
+            padding: 15px; font-family: 'Courier New', monospace;
+            font-size: 0.8rem; color: #0f0; overflow: hidden;
+            display: flex; flex-direction: column-reverse;
+        }
+
+        .log-entry { margin-bottom: 2px; opacity: 0.8; }
+        .log-time { color: #555; margin-right: 10px; }
+        .log-warn { color: yellow; }
+        .log-err { color: red; }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        @keyframes spin-rev {
+            0% { transform: translate(-50%, -50%) rotate(360deg); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 50px rgba(0, 243, 255, 0.2); }
+            50% { box-shadow: 0 0 80px rgba(0, 243, 255, 0.5); }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .glitch { position: relative; }
+        .glitch::before, .glitch::after {
+            content: attr(data-text); position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color);
+        }
+        .glitch::before {
+            left: 2px; text-shadow: -1px 0 red;
+            clip: rect(24px, 550px, 90px, 0);
+            animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
+        }
+        .glitch::after {
+            left: -2px; text-shadow: -1px 0 blue;
+            clip: rect(85px, 550px, 140px, 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+        @keyframes glitch-anim-1 {
+            0% { clip: rect(20px, 9999px, 10px, 0); }
+            20% { clip: rect(60px, 9999px, 70px, 0); }
+            40% { clip: rect(20px, 9999px, 10px, 0); }
+            60% { clip: rect(80px, 9999px, 5px, 0); }
+            80% { clip: rect(10px, 9999px, 90px, 0); }
+            100% { clip: rect(40px, 9999px, 30px, 0); }
+        }
+        @keyframes glitch-anim-2 {
+            0% { clip: rect(10px, 9999px, 80px, 0); }
+            20% { clip: rect(90px, 9999px, 10px, 0); }
+            40% { clip: rect(30px, 9999px, 50px, 0); }
+            60% { clip: rect(10px, 9999px, 20px, 0); }
+            80% { clip: rect(70px, 9999px, 60px, 0); }
+            100% { clip: rect(20px, 9999px, 40px, 0); }
+        }
+
+        @media (max-width: 900px) {
+            .interface {
+                grid-template-columns: 1fr; grid-template-rows: auto;
+                height: auto; overflow-y: auto; display: block;
+            }
+            .core-container { height: 400px; margin-bottom: 20px; }
+            .module { margin-bottom: 20px; }
+        }
+    </style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="interface">
+    <!-- LEFT COLUMN: VPN (top) + Telegram (bottom) -->
+    <div style="display: flex; flex-direction: column; gap: 20px; height: 100%;">
+        <!-- TOP: VPN -->
+        <div class="module mod-vpn">
+            <div>
+                <h2>
+                    <span class="status-dot {% if vpn_active %}status-active{% else %}status-inactive{% endif %}"></span>
+                    VPN SERVER
+                </h2>
+                <div class="stat-row"><span>Protocol:</span> <span>WireGuard</span></div>
+                <div class="stat-row"><span>Active Peers:</span> <span id="vpn-peers">{{ vpn_peers }}</span></div>
+                <div class="stat-row"><span>Traffic In:</span> <span id="vpn-in">{{ vpn_in }}</span></div>
+                <div class="stat-row"><span>Traffic Out:</span> <span id="vpn-out">{{ vpn_out }}</span></div>
+            </div>
+            <div>
+                <div style="font-size: 0.7rem; margin-top:10px;">LOAD</div>
+                <div class="progress-bar"><div class="progress-fill" id="vpn-bar" style="width: {{ vpn_load }}%"></div></div>
+            </div>
+        </div>
+
+        <!-- BOTTOM: TELEGRAM -->
+        <div class="module mod-tg">
+            <div>
+                <h2>
+                    <span class="status-dot {% if proxy_enabled %}status-active{% else %}status-inactive{% endif %}"></span>
+                    TELEGRAM PROXY
+                </h2>
+                <div class="stat-row"><span>MTProto:</span> <span>Enabled</span></div>
+                <div class="stat-row"><span>Secret:</span> <span>********</span></div>
+                <div class="stat-row"><span>Requests:</span> <span id="tg-req">{{ tg_requests }}</span></div>
+            </div>
+            <div>
+                <div style="font-size: 0.7rem; margin-top:10px;">LATENCY</div>
+                <div class="progress-bar"><div class="progress-fill" id="tg-bar" style="width: {{ tg_latency }}%"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER: CORE -->
+    <div class="core-container">
+        <div class="reactor">
+            <div class="reactor-ring r1"></div>
+            <div class="reactor-ring r2"></div>
+            <div class="reactor-ring r3"></div>
+            <div class="reactor-ring r4"></div>
+            <div class="core-text">
+                <h1 class="glitch" data-text="UBUNTU">UBUNTU</h1>
+                <p>{{ os_name }} // ONLINE</p>
+                <p id="uptime" style="color: var(--primary); font-size: 1.2rem; margin-top: 10px;">{{ uptime }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN: FastAPI + Docker -->
+    <div style="display: flex; flex-direction: column; gap: 20px; height: 100%;">
+        <!-- TOP: FASTAPI -->
+        <div class="module mod-api">
+            <div>
+                <h2>
+                    <span class="status-dot status-active"></span>
+                    FASTAPI MONITOR
+                </h2>
+                <div class="stat-row"><span>Endpoint:</span> <span>/api/v1/status</span></div>
+                <div class="stat-row"><span>Uptime:</span> <span>99.9%</span></div>
+                <div class="stat-row"><span>CPU Load:</span> <span id="api-cpu">{{ api_cpu }}%</span></div>
+                <div class="stat-row"><span>RAM Usage:</span> <span id="api-ram">{{ api_ram }}%</span></div>
+            </div>
+            <div>
+                <div style="font-size: 0.7rem; margin-top:10px;">SYSTEM HEALTH</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="api-bar" style="width: {{ (api_cpu + api_ram) / 2 }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM: DOCKER -->
+        <div class="module mod-docker">
+            <div>
+                <h2>
+                    <span class="status-dot {% if docker_active %}status-active{% else %}status-inactive{% endif %}"></span>
+                    DOCKER MONITOR
+                </h2>
+                <div class="stat-row"><span>Status:</span> <span>{% if docker_active %}Active{% else %}Inactive{% endif %}</span></div>
+                <div class="stat-row"><span>Containers:</span> <span id="docker-count">{{ docker_count }}</span></div>
+                <div class="stat-row"><span>Daemon:</span> <span>Docker</span></div>
+            </div>
+            <div>
+                <div style="font-size: 0.7rem; margin-top:10px;">RESOURCE USAGE</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="docker-bar" style="width: {{ docker_load }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM: TERMINAL -->
+    <div class="terminal" id="terminal">
+        <!-- Logs will appear here -->
+    </div>
+</div>
+
+<script>
+    // --- BACKGROUND ANIMATION ---
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 0.5;
+            this.vy = (Math.random() - 0.5) * 0.5;
+            this.size = Math.random() * 2;
+            this.color = Math.random() > 0.5 ? '#00f3ff' : '#bd00ff';
+        }
+        update() {
+            this.x += this.vx; this.y += this.vy;
+            if (this.x < 0 || this.x > width) this.vx *= -1;
+            if (this.y < 0 || this.y > height) this.vy *= -1;
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = this.color; ctx.fill();
+        }
+    }
+
+    for (let i = 0; i < 100; i++) particles.push(new Particle());
+
+    function animateBg() {
+        ctx.fillStyle = 'rgba(5, 5, 5, 0.1)';
+        ctx.fillRect(0, 0, width, height);
+        particles.forEach(p => {
+            p.update(); p.draw();
+            particles.forEach(p2 => {
+                let dx = p.x - p2.x, dy = p.y - p2.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 100) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = `rgba(0, 243, 255, ${1 - dist/100})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            });
+        });
+        requestAnimationFrame(animateBg);
+    }
+    animateBg();
+
+    // --- REAL DATA FETCH ---
+    async function fetchMetrics() {
+        try {
+            const response = await fetch('/api/v1/refresh');
+            const data = await response.json();
+
+            // VPN
+            document.getElementById('vpn-peers').textContent = data.vpn.peers;
+            document.getElementById('vpn-in').textContent = data.vpn.in;
+            document.getElementById('vpn-out').textContent = data.vpn.out;
+            document.getElementById('vpn-bar').style.width = data.vpn.load + '%';
+
+            // Uptime
+            document.getElementById('uptime').textContent = data.uptime;
+
+            // Telegram
+            document.getElementById('tg-req').textContent = data.telegram.requests;
+            document.getElementById('tg-bar').style.width = data.telegram.latency + '%';
+
+            // FastAPI
+            document.getElementById('api-cpu').textContent = data.fastapi.cpu + '%';
+            document.getElementById('api-ram').textContent = data.fastapi.ram + '%';
+            document.getElementById('api-bar').style.width = ((data.fastapi.cpu + data.fastapi.ram) / 2) + '%';
+
+            // Docker
+            document.getElementById('docker-count').textContent = data.docker.containers;
+            document.getElementById('docker-bar').style.width = data.docker.load + '%';
+
+            // OS Name
+            document.querySelector('.core-text p').textContent = `${data.os_name} // ONLINE`;
+
+            // Terminal log
+            addLog(`[METRICS] CPU: ${data.fastapi.cpu}% | RAM: ${data.fastapi.ram}% | VPN peers: ${data.vpn.peers} | Docker: ${data.docker.containers}`);
+
+        } catch (error) {
+            console.error('Fetch error:', error);
+            addLog('[ERROR] Failed to fetch metrics', 'err');
+        }
+    }
+
+    // --- UPTIME COUNTER (client-side fallback) ---
+    let seconds = {{ uptime.split(':')[0]|int * 3600 + uptime.split(':')[1]|int * 60 + uptime.split(':')[2]|int }};
+    function updateUptime() {
+        seconds++;
+        const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+        const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        document.getElementById('uptime').textContent = `${h}:${m}:${s}`;
+    }
+
+    // --- TERMINAL LOGS ---
+    const terminal = document.getElementById('terminal');
+    const logMessages = [
+        { msg: "System heartbeat OK", type: "normal" },
+        { msg: "WireGuard tunnel active", type: "normal" },
+        { msg: "FastAPI request processed", type: "normal" },
+        { msg: "Docker container health check", type: "normal" },
+        { msg: "Proxy connection established", type: "normal" },
+        { msg: "Memory threshold warning", type: "warn" },
+        { msg: "Network latency spike detected", type: "warn" },
+        { msg: "Authentication failed from unknown IP", type: "err" }
+    ];
+
+    function addLog(message, type = 'normal') {
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('ru-RU');
+        let colorClass = "";
+        if(type === 'warn') colorClass = "log-warn";
+        if(type === 'err') colorClass = "log-err";
+        div.innerHTML = `<span class="log-time">[${timeStr}]</span> <span class="${colorClass}">${message}</span>`;
+        terminal.prepend(div);
+        if (terminal.children.length > 12) terminal.removeChild(terminal.lastChild);
+    }
+
+    // --- INIT ---
+    setInterval(fetchMetrics, 3000);  // Real data every 3s
+    setInterval(updateUptime, 1000);   // Uptime counter
+    setInterval(() => {
+        const randomLog = logMessages[Math.floor(Math.random() * logMessages.length)];
+        addLog(randomLog.msg, randomLog.type);
+    }, 2000);
+
+    // Initial fetch
+    fetchMetrics();
+    addLog("🚀 Ubuntu Core Monitor initialized", "normal");
+    addLog(`📊 Initial load: CPU {{ cpu_load }}% | RAM {{ ram_percent }}%`, "normal");
+</script>
+</body>
+</html>
