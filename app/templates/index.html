@@ -3,41 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Status</title>
+    <title>Server Dashboard</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 20px; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 500px; }
-        h1 { text-align: center; color: {{ global_color }}; font-size: 1.5rem; margin-bottom: 5px; }
-        .subtitle { text-align: center; color: #888; font-size: 0.9rem; margin-bottom: 30px; }
-        .card { background: #1e1e1e; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border-left: 6px solid #555; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { text-align: center; color: {{ global_color }}; }
+        .card { background: #1e1e1e; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3 6px solid #555; }
         .card.ok { border-left-color: #00ff88; }
         .card.err { border-left-color: #ff4444; }
-        .row { display: flex; justify-content: space-between; align-items: center; }
+        .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .label { font-size: 1.1rem; font-weight: 500; }
-        .badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #000; font-size: 0.9rem; min-width: 80px; text-align: center; }
-        .cpu-section { text-align: center; }
-        .cpu-value { font-size: 2.5rem; font-weight: bold; color: #fff; margin: 10px 0; }
-        .progress-bg { background: #333; height: 10px; border-radius: 5px; overflow: hidden; }
+        .badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; color: #000; font-size: 0.9rem; }
+        .section-title { font-size: 1.2rem; margin-top: 25px; color: #aaa; border-bottom: 1px solid #444; padding-bottom: 5px; }
+        .progress-bg { background: #333; height: 12px; border-radius: 6px; margin-top: 8px; overflow: hidden; }
         .progress-fill { height: 100%; transition: width 0.5s ease; }
         .cpu-fill { background: linear-gradient(90deg, #00c6ff, #0072ff); }
         .ram-fill { background: linear-gradient(90deg, #f12711, #f5af19); }
-        small { display: block; text-align: center; color: #555; margin-top: 30px; font-size: 0.8rem; }
+        small { display: block; text-align: center; color: #666; margin-top: 30px; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>{{ global_msg }}</h1>
-    <div class="subtitle">{{ hostname }} • {{ ip_address }}</div>
+    <p style="text-align:center; color:#aaa;">{{ hostname }} • {{ ip_address }}</p>
 
-    <!-- MTProto Status -->
-    <div class="card {% if mtproxy.status == 'active' %}ok{% else %}err{% endif %}">
-        <div class="row">
-            <span class="label">📦 MTProto Proxy</span>
-            <span class="badge" style="background:{{ mtproxy.color }}">{{ mtproxy.icon }} {{ mtproxy.status.upper() }}</span>
-        </div>
-    </div>
+    <!-- Services -->
+    <div class="section-title">Службы</div>
 
-    <!-- Hysteria Status -->
     <div class="card {% if hysteria.status == 'active' %}ok{% else %}err{% endif %}">
         <div class="row">
             <span class="label">⚡ Hysteria 2</span>
@@ -45,41 +37,64 @@
         </div>
     </div>
 
-    <!-- CPU Load -->
-    <div class="card cpu-section">
-        <div class="label">🖥️ Нагрузка CPU</div>
-        <div class="cpu-value">{{ cpu_load }}%</div>
+    <div class="card {% if mtproxy.status == 'active' %}ok{% else %}err{% endif %}">
+        <div class="row">
+            <span class="label">📦 MTProxy</span>
+            <span class="badge" style="background:{{ mtproxy.color }}">{{ mtproxy.icon }} {{ mtproxy.status.upper() }}</span>
+        </div>
+    </div>
+
+    <!-- Docker Containers -->
+    <div class="section-title">Docker Контейнеры</div>
+    {% for container in containers %}
+    <div class="card ok">
+        <div class="row">
+            <span class="label">{{ container.name }}</span>
+            <span class="badge" style="background:#00ff88;">{{ container.state }}</span>
+        </div>
+        <div style="font-size:0.8em; color:#888;">{{ container.image }}</div>
+    </div>
+    {% endfor %}
+    {% if not containers %}
+    <div class="card err">
+        <div class="row">
+            <span class="label">Нет активных контейнеров</span>
+            <span class="badge" style="background:#ff4444;">-</span>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- System Resources -->
+    <div class="section-title">Системные ресурсы</div>
+
+    <div class="card">
+        <div class="row">
+            <span class="label">🖥️ CPU Load (1m)</span>
+            <span>{{ cpu_load }}%</span>
+        </div>
         <div class="progress-bg">
             <div class="progress-fill cpu-fill" style="width: {{ cpu_load }}%"></div>
         </div>
-        <div style="font-size: 0.8rem; color: #666; margin-top: 8px;">Средняя за 1 мин</div>
     </div>
 
-    <!-- RAM Usage -->
-    <div class="card cpu-section">
-        <div class="label">💾 Оперативная память (RAM)</div>
-        <div class="cpu-value">{{ ram_data.percent }}%</div>
+    <div class="card">
+        <div class="row">
+            <span class="label">💾 RAM</span>
+            <span>{{ ram.percent }}%</span>
+        </div>
         <div style="font-size: 0.9rem; color: #ccc; margin-bottom: 5px;">
-            {{ ram_data.used_gb }} ГБ / {{ ram_data.total_gb }} ГБ
+            {{ ram.used_gb }} ГБ / {{ ram.total_gb }} ГБ
         </div>
         <div class="progress-bg">
-            <div class="progress-fill ram-fill" style="width: {{ ram_data.percent }}%"></div>
+            <div class="progress-fill ram-fill" style="width: {{ ram.percent }}%"></div>
         </div>
     </div>
 
-    <small>Автообновление через <span id="timer">5</span> сек</small>
+<!--    <small>Обновляется каждые 5 секунд</small>-->
 </div>
 
 <!--<script>-->
-<!--    let seconds = 5;-->
-<!--    const timerElem = document.getElementById('timer');-->
-<!--    setInterval(() => {-->
-<!--        seconds&#45;&#45;;-->
-<!--        timerElem.innerText = seconds;-->
-<!--        if (seconds <= 0) {-->
-<!--            window.location.reload();-->
-<!--        }-->
-<!--    }, 1000);-->
+<!--    setTimeout(() => location.reload(), 5000);-->
 <!--</script>-->
 </body>
 </html>

@@ -1,14 +1,22 @@
 services:
-  server-monitor:
+  server-dashboard:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: server-monitor
+    container_name: server-dashboard
     restart: unless-stopped
     ports:
-      - "8000:8000"  # <-- Только этот порт
+      - "8000:8000"
     volumes:
       - /run/systemd/system:/run/systemd/system
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /proc:/host/proc:ro
     environment:
       - SYSTEMD_OFFLINE=0
     privileged: true
+    pid: "host"
+    command: >
+      sh -c "
+        mount --bind /host/proc /proc &&
+        uvicorn main:app --host 0.0.0.0 --port 8000
+      "
