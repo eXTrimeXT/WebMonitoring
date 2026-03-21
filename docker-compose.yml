@@ -7,9 +7,9 @@ services:
     restart: unless-stopped
     ports:
       # HTTP
-      - '80:80'
+      - '8000:80'
       # HTTPS
-      - '443:443'
+      - '8443:443'
       # Web UI (админка)
       - '81:81'
     volumes:
