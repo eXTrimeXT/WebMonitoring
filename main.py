@@ -157,18 +157,6 @@ async def dashboard():
 
             <small>Автообновление через <span id="timer">5</span> сек</small>
         </div>
-
-        <script>
-            let seconds = 5;
-            const timerElem = document.getElementById('timer');
-            setInterval(() => {{
-                seconds--;
-                timerElem.innerText = seconds;
-                if (seconds <= 0) {{
-                    window.location.reload();
-                }}
-            }}, 1000);
-        </script>
     </body>
     </html>
     """
