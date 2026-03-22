@@ -1,6 +1,5 @@
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -41,12 +40,17 @@ async def dashboard(request: Request):
         "request": request,
         # System Info
         "os_name": metrics["system"]["info"]["full_name"],
-        # VPN
+        # VPN (обновлённый)
+        "vpn_protocol": metrics["vpn"]["protocol"],  # "XRay" или "Hysteria"
         "vpn_peers": metrics["vpn"]["peers"],
         "vpn_in": metrics["vpn"]["traffic_in"],
         "vpn_out": metrics["vpn"]["traffic_out"],
         "vpn_load": metrics["vpn"]["load"],
         "vpn_active": metrics["vpn"]["active"],
+        "vpn_delay": metrics["vpn"]["delay"],  # Только для XRay
+        "vpn_alive": metrics["vpn"]["alive"],  # Только для XRay
+        "xray_active": metrics["vpn"]["xray_active"],
+        "hysteria_active": metrics["vpn"]["hysteria_active"],
         # Uptime
         "uptime": metrics["system"]["uptime"],
         # Telegram Proxy
@@ -81,11 +85,14 @@ async def refresh_metrics():
     metrics = get_all_metrics()
     return {
         "vpn": {
+            "protocol": metrics["vpn"]["protocol"],
             "peers": metrics["vpn"]["peers"],
             "in": metrics["vpn"]["traffic_in"],
             "out": metrics["vpn"]["traffic_out"],
             "load": metrics["vpn"]["load"],
-            "active": metrics["vpn"]["active"]
+            "active": metrics["vpn"]["active"],
+            "delay": metrics["vpn"]["delay"],
+            "alive": metrics["vpn"]["alive"]
         },
         "uptime": metrics["system"]["uptime"],
         "os_name": metrics["system"]["info"]["full_name"],
