@@ -83,7 +83,6 @@ def check_xray_status() -> Dict:
         "traffic_in": "0 MB",
         "traffic_out": "0 MB",
         "delay": 0,
-        "alive": False,
         "load": 0
     }
     try:
@@ -130,7 +129,6 @@ def check_xray_status() -> Dict:
                     observatory = data.get("observatory", {})
                     for tag, obs_data in observatory.items():
                         if isinstance(obs_data, dict):
-                            result["alive"] = obs_data.get("alive", False)
                             result["delay"] = obs_data.get("delay", 0)
                             break  # Берём первый доступный
 
@@ -165,7 +163,6 @@ def check_vpn_status() -> Dict:
             "traffic_out": xray_status["traffic_out"],
             "load": xray_status["load"],
             "delay": xray_status["delay"],
-            "alive": xray_status["alive"],
             "xray_active": True,
             "hysteria_active": hysteria_status["active"]
         }
@@ -178,7 +175,6 @@ def check_vpn_status() -> Dict:
             "traffic_out": hysteria_status["traffic_out"],
             "load": hysteria_status["load"],
             "delay": 0,
-            "alive": True,
             "xray_active": False,
             "hysteria_active": True
         }
@@ -191,7 +187,6 @@ def check_vpn_status() -> Dict:
             "traffic_out": "0 MB",
             "load": 0,
             "delay": 0,
-            "alive": False,
             "xray_active": False,
             "hysteria_active": False
         }

@@ -299,7 +299,6 @@
 
                 {% if xray_active %}
                 <!-- XRay specific stats -->
-                <div class="stat-row"><span>Alive:</span> <span id="vpn-alive">{% if vpn_alive %}✅ Yes{% else %}❌ No{% endif %}</span></div>
                 <div class="stat-row"><span>Delay:</span> <span id="vpn-delay">{{ vpn_delay }} ms</span></div>
                 {% endif %}
 
@@ -470,11 +469,7 @@
                 // Обновляем Protocol
                 document.querySelector('.mod-vpn .stat-row:nth-child(2) span:last-child').textContent = 'XRay';
 
-                // Обновляем Alive и Delay, если элементы существуют
-                const aliveEl = document.getElementById('vpn-alive');
-                if (aliveEl) {
-                    aliveEl.textContent = data.vpn.alive ? '✅ Yes' : '❌ No';
-                }
+                // Обновляем Delay, если элементы существуют
                 const delayEl = document.getElementById('vpn-delay');
                 if (delayEl) {
                     delayEl.textContent = data.vpn.delay + ' ms';

@@ -48,7 +48,6 @@ async def dashboard(request: Request):
         "vpn_load": metrics["vpn"]["load"],
         "vpn_active": metrics["vpn"]["active"],
         "vpn_delay": metrics["vpn"]["delay"],  # Только для XRay
-        "vpn_alive": metrics["vpn"]["alive"],  # Только для XRay
         "xray_active": metrics["vpn"]["xray_active"],
         "hysteria_active": metrics["vpn"]["hysteria_active"],
         # Uptime
@@ -92,7 +91,6 @@ async def refresh_metrics():
             "load": metrics["vpn"]["load"],
             "active": metrics["vpn"]["active"],
             "delay": metrics["vpn"]["delay"],
-            "alive": metrics["vpn"]["alive"]
         },
         "uptime": metrics["system"]["uptime"],
         "os_name": metrics["system"]["info"]["full_name"],
